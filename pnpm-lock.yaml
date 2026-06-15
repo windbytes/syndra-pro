@@ -33,8 +33,8 @@ importers:
         specifier: ^12.11.0
         version: 12.11.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@zxcvbn-ts/core':
-        specifier: ^3.0.4
-        version: 3.0.4
+        specifier: ^4.1.1
+        version: 4.1.1
       antd:
         specifier: ^6.4.4
         version: 6.4.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -1008,8 +1008,8 @@ packages:
   '@xyflow/system@0.0.77':
     resolution: {integrity: sha512-qCDCMCQAAgUu8yHnhloHG9F5mwPX5E+Wl8McpYIOPSSXfzFJJoZcwOcsDiAjitVKIg2de1WmJbCHfpcvxprsgg==}
 
-  '@zxcvbn-ts/core@3.0.4':
-    resolution: {integrity: sha512-aQeiT0F09FuJaAqNrxynlAwZ2mW/1MdXakKWNmGM1Qp/VaY6CnB/GfnMS2T8gB2231Esp1/maCWd8vTG4OuShw==}
+  '@zxcvbn-ts/core@4.1.1':
+    resolution: {integrity: sha512-zaHV9GDy9dM1biTKuYgGnrjWJ6zXWf6SkxyTYmRCjl8ij1PQdlPGIfmtoQMNdyl4tzaHhXlPBmx4XbUzwp5pBg==}
 
   acorn@8.17.0:
     resolution: {integrity: sha512-xRQbDb9BnwDafYNn6Vwl839DYVjqXYb1XVGtWAZ1kcDc6iwAL4hg3B1dZlRiuENFeO2H53gFG3in621AdERVAg==}
@@ -2759,7 +2759,7 @@ snapshots:
       d3-selection: 3.0.0
       d3-zoom: 3.0.0
 
-  '@zxcvbn-ts/core@3.0.4':
+  '@zxcvbn-ts/core@4.1.1':
     dependencies:
       fastest-levenshtein: 1.0.16
 

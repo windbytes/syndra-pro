@@ -108,10 +108,20 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, './src'),
       },
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
     },
     // 优化依赖预构建（仅保留首屏关键依赖，非首屏大型库由路由懒加载自然按需加载）
     optimizeDeps: {
-      include: ['react', 'react-dom', 'antd', 'dayjs', 'axios', '@tanstack/react-query', 'react-router', 'zustand'],
+      include: [
+        'react',
+        'react-dom',
+        'antd',
+        'dayjs',
+        'axios',
+        '@tanstack/react-query',
+        '@tanstack/react-router',
+        'zustand',
+      ],
     },
     // 服务器配置以及代理
     server: {
