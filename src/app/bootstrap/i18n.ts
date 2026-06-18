@@ -1,27 +1,39 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import enUS from '@/locales/en-US';
-import zhCN from '@/locales/zh-CN';
+import { LanguagesSupported } from '@/locales/language';
 import { useSettingStore } from '@/shared/stores/setting.store';
 
-export const resources = {
-  'zh-CN': {
-    translation: zhCN,
+const loadLangResources = async (lang: string) => ({
+  translation: {
+    common: (await import(`../../locales/${lang}/common.ts`)).default,
+    layout: (await import(`../../locales/${lang}/layout.ts`)).default,
+    menu: (await import(`../../locales/${lang}/menu.ts`)).default,
+    login: (await import(`../../locales/${lang}/login.ts`)).default,
+    app: (await import(`../../locales/${lang}/app.ts`)).default,
+    workflow: (await import(`../../locales/${lang}/workflow.ts`)).default,
+    preferences: (await import(`../../locales/${lang}/preferences.ts`)).default,
+    user: (await import(`../../locales/${lang}/user.ts`)).default,
   },
-  'en-US': {
-    translation: enUS,
-  },
-} as const;
+});
 
-export type AppLocale = keyof typeof resources;
+type Resource = Record<string, Awaited<ReturnType<typeof loadLangResources>>>;
+
+export const loadResources = async (): Promise<Resource> => {
+  const resources: Partial<Resource> = {};
+  for (const lang of LanguagesSupported) {
+    resources[lang] = await loadLangResources(lang);
+  }
+  return resources as Resource;
+};
 
 export async function initI18n() {
   const locale = useSettingStore.getState().locale;
+  const resources = await loadResources();
 
   if (!i18n.isInitialized) {
     await i18n.use(initReactI18next).init({
       lng: locale,
-      fallbackLng: 'zh-CN',
+      fallbackLng: locale,
       resources,
       interpolation: {
         escapeValue: false,
