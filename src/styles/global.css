@@ -1,0 +1,31 @@
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #f2f3f5;
+}
+
+html[data-theme='dark'] body {
+  background: #0f0f0f;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.app-root {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.app-root__card {
+  width: min(480px, 100%);
+}

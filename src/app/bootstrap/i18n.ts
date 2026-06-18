@@ -1,8 +1,36 @@
-/**
- * 国际化初始化
- *
- * 初始化 i18next、加载语言资源、绑定语言切换事件，
- * 作为全局多语言能力的启动入口。
- */
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import enUS from '@/locales/en-US';
+import zhCN from '@/locales/zh-CN';
+import { useSettingStore } from '@/shared/stores/setting.store';
 
-export {};
+export const resources = {
+  'zh-CN': {
+    translation: zhCN,
+  },
+  'en-US': {
+    translation: enUS,
+  },
+} as const;
+
+export type AppLocale = keyof typeof resources;
+
+export async function initI18n() {
+  const locale = useSettingStore.getState().locale;
+
+  if (!i18n.isInitialized) {
+    await i18n.use(initReactI18next).init({
+      lng: locale,
+      fallbackLng: 'zh-CN',
+      resources,
+      interpolation: {
+        escapeValue: false,
+      },
+    });
+  }
+
+  return i18n;
+}
+
+export const changeLanguage = i18n.changeLanguage.bind(i18n);
+export default i18n;
