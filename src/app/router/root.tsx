@@ -1,8 +1,17 @@
-/**
- * 根路由组件
- *
- * TanStack Router 的根 Route（RootRoute），
- * 通常包裹全局 Outlet、Devtools、全局错误边界等。
- */
+import { createRootRoute, Outlet } from '@tanstack/react-router';
+import { NotFoundPage } from './fallback';
 
-export {};
+/** 根路由组件：仅渲染子路由出口 */
+function RootComponent() {
+  return <Outlet />;
+}
+
+/**
+ * 根路由
+ *
+ * 整棵路由树的根，承载全局出口与默认 404 处理。
+ */
+export const rootRoute = createRootRoute({
+  component: RootComponent,
+  notFoundComponent: NotFoundPage,
+});

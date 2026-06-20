@@ -4,17 +4,18 @@ import zhCN from 'antd/es/locale/zh_CN';
 import dayjs from 'dayjs';
 import 'dayjs/locale/en';
 import 'dayjs/locale/zh-cn';
-import { useEffect, type PropsWithChildren } from 'react';
+import { type PropsWithChildren, useEffect } from 'react';
 import { changeLanguage } from '@/app/bootstrap/i18n';
-import { useSettingStore } from '@/shared/stores/setting.store';
+import { usePreferencesStore } from '@/shared/stores/preferences.store';
 
 /**
  * 国际化 Provider
  *
- * 注入当前语言环境（zh-CN / en-US ...），同时驱动 i18next、antd locale 与 dayjs。
+ * 读取全局偏好（usePreferencesStore）中的语言设置，
+ * 同步驱动 i18next、antd locale 与 dayjs。
  */
 export function LocaleProvider({ children }: PropsWithChildren) {
-  const locale = useSettingStore((state) => state.locale);
+  const locale = usePreferencesStore((state) => state.preferences.app.locale);
   const isZhCN = locale === 'zh-CN';
 
   useEffect(() => {

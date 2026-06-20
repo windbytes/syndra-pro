@@ -10,6 +10,7 @@ import { ThemeProvider } from './ThemeProvider';
  *
  * 组合所有上层 Provider（Query / Theme / Locale / Auth 等），
  * 作为整个 React 应用的统一出口。
+ * antd 的 message / notification / modal 静态实例由 AuthProvider 注入到 antdUtils。
  */
 export function AppProvider({ children }: PropsWithChildren) {
   return (

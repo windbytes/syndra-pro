@@ -1,48 +1,44 @@
 import { ConfigProvider } from 'antd';
-import { useEffect, useMemo, type PropsWithChildren } from 'react';
+import { type PropsWithChildren, useEffect } from 'react';
 import { useShallow } from 'zustand/shallow';
-import { applyDocumentTheme, createAntdTheme, getResolvedThemeMode } from '@/app/bootstrap/theme';
-import { useSettingStore } from '@/shared/stores/setting.store';
+import { applyDocumentTheme, createAntdTheme } from '@/app/bootstrap/theme';
+import { useResolvedThemeMode } from '@/shared/hooks/useResolvedThemeMode';
+import { usePreferencesStore } from '@/shared/stores/preferences.store';
 
 /**
  * 主题 Provider
  *
- * 注入主题上下文（明/暗、主色、紧凑模式等），
- * 同时驱动 antd ConfigProvider 与 document 主题属性。
+ * 读取全局偏好（usePreferencesStore）中的主题配置，
+ * 驱动 antd ConfigProvider 与 document 的明暗主题属性。
  */
 export function ThemeProvider({ children }: PropsWithChildren) {
-  const { colorPrimary, colorError, colorSuccess, colorWarning, radius, themeMode, compact } = useSettingStore(
+  const { colorPrimary, colorError, colorSuccess, colorWarning, radius, themeMode, compact } = usePreferencesStore(
     useShallow((state) => ({
-      colorPrimary: state.colorPrimary,
-      colorError: state.colorError,
-      colorSuccess: state.colorSuccess,
-      colorWarning: state.colorWarning,
-      radius: state.radius,
-      themeMode: state.themeMode,
-      compact: state.compact,
+      colorPrimary: state.preferences.theme.colorPrimary,
+      colorError: state.preferences.theme.colorError,
+      colorSuccess: state.preferences.theme.colorSuccess,
+      colorWarning: state.preferences.theme.colorWarning,
+      radius: state.preferences.theme.radius,
+      themeMode: state.preferences.theme.mode,
+      compact: state.preferences.app.compact,
     }))
   );
 
-  const resolvedThemeMode = getResolvedThemeMode(themeMode);
-  const isDark = resolvedThemeMode === 'dark';
+  const isDark = useResolvedThemeMode(themeMode) === 'dark';
 
   useEffect(() => {
     applyDocumentTheme(isDark);
   }, [isDark]);
 
-  const theme = useMemo(
-    () =>
-      createAntdTheme({
-        isDark,
-        compact,
-        colorPrimary,
-        colorError,
-        colorSuccess,
-        colorWarning,
-        radius,
-      }),
-    [isDark, compact, colorPrimary, colorError, colorSuccess, colorWarning, radius]
-  );
+  const theme = createAntdTheme({
+    isDark,
+    compact,
+    colorPrimary,
+    colorError,
+    colorSuccess,
+    colorWarning,
+    radius,
+  });
 
   return <ConfigProvider theme={theme}>{children}</ConfigProvider>;
 }

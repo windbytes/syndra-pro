@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { LanguagesSupported } from '@/locales/language';
-import { useSettingStore } from '@/shared/stores/setting.store';
+import { usePreferencesStore } from '@/shared/stores/preferences.store';
 
 const loadLangResources = async (lang: string) => ({
   translation: {
@@ -27,7 +27,7 @@ export const loadResources = async (): Promise<Resource> => {
 };
 
 export async function initI18n() {
-  const locale = useSettingStore.getState().locale;
+  const locale = usePreferencesStore.getState().preferences.app.locale;
   const resources = await loadResources();
 
   if (!i18n.isInitialized) {

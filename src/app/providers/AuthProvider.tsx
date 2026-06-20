@@ -1,32 +1,24 @@
 import { App as AntdApp } from 'antd';
-import { useEffect, type PropsWithChildren } from 'react';
-import { useAuthStore } from '@/app/store/auth.store';
+import { type PropsWithChildren, useEffect } from 'react';
 import { antdUtils } from '@/shared/utils/antd';
 
 /**
  * 认证上下文 Provider
  *
- * 承接 syndra-admin App.tsx 中的 antd App 实例初始化。
- * 菜单与按钮权限加载会在后续真实接口和权限 store 完成后接入这里。
+ * 承接 syndra-admin App.tsx 中的 antd App 实例初始化：
+ * 将 message / notification / modal 注入 antdUtils，供非组件上下文（如 axios 拦截器）消费。
+ *
+ * 注：登录态统一由 `@/shared/stores/user.store` 维护，
+ * 菜单与按钮权限的加载在路由入口 `@/app/router` 中按角色触发。
  */
 export function AuthProvider({ children }: PropsWithChildren) {
   const { notification, message, modal } = AntdApp.useApp();
-  const isLogin = useAuthStore((state) => state.isLogin);
-  const roleId = useAuthStore((state) => state.roleId);
 
   useEffect(() => {
     antdUtils.setMessageInstance(message);
     antdUtils.setNotificationInstance(notification);
     antdUtils.setModalInstance(modal);
   }, [message, modal, notification]);
-
-  useEffect(() => {
-    if (!isLogin || !roleId) {
-      return;
-    }
-
-    // TODO: 接入菜单与按钮权限接口后，在这里触发权限数据预加载。
-  }, [isLogin, roleId]);
 
   return children;
 }

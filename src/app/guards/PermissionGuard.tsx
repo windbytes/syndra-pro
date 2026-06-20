@@ -1,8 +1,37 @@
+import { redirect } from '@tanstack/react-router';
+import { useMenuStore } from '@/shared/stores/preferences.store';
+import { useUserStore } from '@/shared/stores/user.store';
+import type { RouteMeta } from '@/types/route';
+import { findMenuByPath } from '@/shared/utils/utils';
+
 /**
  * 权限点守卫
  *
- * 基于权限码（permission code）控制路由 / 组件 / 按钮的访问，
- * 不满足时渲染 403 或回退视图。
+ * 基于登录态 + 菜单可达性 + 权限码控制路由访问，
+ * 对应 syndra-admin 中 RoutePermissionGuard 的逻辑。
+ * 作为动态路由的 beforeLoad 使用。
  */
+export function ensurePermission(meta: RouteMeta | undefined, pathname: string): void {
+  const { isLogin, loginUser } = useUserStore.getState();
 
-export {};
+  if (!isLogin) {
+    throw redirect({ to: '/login', search: { redirect: pathname } });
+  }
+
+  // 忽略授权 / 无需鉴权的路由直接放行
+  if (meta?.ignoreAuth || !meta?.requiresAuth) {
+    return;
+  }
+
+  // 超级管理员放行
+  if (loginUser === 'admin') {
+    return;
+  }
+
+  // 校验菜单是否可达
+  const { caches } = useMenuStore.getState();
+  const currentMenu = findMenuByPath(pathname, caches);
+  if (!currentMenu) {
+    throw redirect({ to: '/403', search: { from: pathname } });
+  }
+}
