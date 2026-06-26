@@ -1,7 +1,7 @@
 import { Dropdown, type MenuProps } from 'antd';
-import { MyIcon } from '@/shared/components/common/MyIcon';
 import { changeLanguage } from '@/app/bootstrap/i18n';
 import { languages } from '@/locales/language';
+import { MyIcon } from '@/shared/components/common/MyIcon';
 import { usePreferencesStore } from '@/shared/stores/preferences.store';
 
 /**

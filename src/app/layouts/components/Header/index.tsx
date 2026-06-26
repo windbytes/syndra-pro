@@ -3,8 +3,8 @@ import { Badge, Dropdown, FloatButton, Layout, Skeleton, Space, Tooltip, theme }
 import { lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/shallow';
-import TabBar from '@/shared/components/common/TabBar';
 import SystemLogo from '@/app/layouts/components/LeftMenu/component/SystemLogo';
+import TabBar from '@/shared/components/common/TabBar';
 import { usePreferencesStore } from '@/shared/stores/preferences.store';
 import type { LayoutType } from '@/types/app';
 import BreadcrumbNavWrapper from './component/BreadcrumbNavWrapper';
