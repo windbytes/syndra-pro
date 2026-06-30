@@ -1,5 +1,6 @@
 import 'antd/dist/reset.css';
 import '@/styles/global.css';
+import '@/styles/tailwind.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { bootstrap } from '@/app/bootstrap';
