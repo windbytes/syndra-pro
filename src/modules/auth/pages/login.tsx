@@ -824,7 +824,9 @@ const Login: React.FC = () => {
         title="选择角色"
         open={showRoleSelector}
         closable={false}
-        maskClosable={false}
+        mask={{
+          closable: false,
+        }}
         footer={null}
         width={600}
         centered

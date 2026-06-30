@@ -21,8 +21,12 @@ export function PlaceholderPage() {
     <div className="p-2">
       <Card>
         <Result
-          icon={<ToolOutlined className="text-[var(--ant-color-primary,#1677ff)]" />}
-          title={<Typography.Title level={4} className="!mb-0">{title}</Typography.Title>}
+          icon={<ToolOutlined className="text-(--ant-color-primary,#1677ff)" />}
+          title={
+            <Typography.Title level={4} className="mb-0!">
+              {title}
+            </Typography.Title>
+          }
           subTitle={
             <div className="flex flex-col items-center gap-2">
               <span>该页面正在建设中，菜单 → 动态路由链路已打通。</span>
