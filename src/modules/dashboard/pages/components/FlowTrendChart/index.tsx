@@ -1,27 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import echarts from '@/shared/config/echartsConfig';
-import { fetchTrendData, type TrendData } from '@/modules/dashboard/api';
+import { fetchTrendData } from '@/modules/dashboard/api';
 import { getFlowTrendChartOption, getResponsiveChartOption } from '../chartConfigs';
 
 export const FlowTrendChart: React.FC = () => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
-  const [chartData, setChartData] = useState<TrendData | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
-  const { data: trendData, isFetching } = useQuery({
+  const { data: chartData, isFetching } = useQuery({
     queryKey: ['flowTrendData'],
     queryFn: fetchTrendData,
     staleTime: 5 * 60 * 1000,
   });
-
-  useEffect(() => {
-    if (trendData) {
-      setChartData(trendData);
-    }
-  }, [trendData]);
 
   useEffect(() => {
     if (!chartRef.current || !chartData) {

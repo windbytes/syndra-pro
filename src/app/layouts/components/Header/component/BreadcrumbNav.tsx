@@ -1,7 +1,6 @@
 import { Breadcrumb, type BreadcrumbProps } from 'antd';
 import { t } from 'i18next';
 import type React from 'react';
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from '@tanstack/react-router';
 import { useShallow } from 'zustand/react/shallow';
@@ -49,21 +48,11 @@ const BreadcrumbNav: React.FC = () => {
       caches: state.caches,
     }))
   );
-  const [items, setItems] = useState<BreadcrumbItem[]>([]);
   // 从全局状态中获取配置是否开启面包屑、图标
   const breadcrumb = usePreferencesStore((state) => state.preferences.breadcrumb);
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
+  const items = patchBreadcrumb(menus, caches, pathname, breadcrumb.showIcon, i18n.language);
 
-  useEffect(() => {
-    const breadItems = patchBreadcrumb(menus, caches, pathname, breadcrumb.showIcon);
-    if (breadItems.length > 0) {
-      setItems(breadItems);
-      return;
-    }
-    setItems([]);
-  }, [pathname, menus, caches, breadcrumb, t, i18n.language]);
-
-  // 组件的DOM内容
   return <Breadcrumb items={items} className="flex justify-between items-center ml-[16px]! syndra-breadcrumb" />;
 };
 export default BreadcrumbNav;
@@ -80,7 +69,8 @@ function patchBreadcrumb(
   routerList: RouteItem[],
   caches: MenuCaches,
   pathname: string,
-  joinIcon: boolean
+  joinIcon: boolean,
+  _language: string
 ): BreadcrumbItem[] {
   if (!routerList?.length || !caches?.pathMap?.size) {
     return [];

@@ -1,7 +1,7 @@
 import { CheckCircleOutlined, UserOutlined } from '@ant-design/icons';
 import { Button, Card, message, Radio, Spin, Typography } from 'antd';
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { UserRole } from '@/modules/auth/api';
 
 const { Title, Text } = Typography;
@@ -26,21 +26,10 @@ interface RoleSelectorProps {
  * 角色选择组件
  */
 const RoleSelector: React.FC<RoleSelectorProps> = ({ roles, defaultRoleId, onSelect, loading = false }) => {
-  const [selectedRoleId, setSelectedRoleId] = useState<string>('');
+  const autoSelectedRoleId = defaultRoleId ?? roles[0]?.id ?? '';
+  const [selectedRoleId, setSelectedRoleId] = useState('');
+  const effectiveSelectedRoleId = selectedRoleId || autoSelectedRoleId;
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 初始化选中角色
-  useEffect(() => {
-    if (defaultRoleId) {
-      setSelectedRoleId(defaultRoleId);
-    } else if (roles.length === 1) {
-      // 如果只有一个角色，自动选中
-      setSelectedRoleId(roles[0]?.id || '');
-    } else if (roles.length > 0) {
-      // 默认选中第一个角色
-      setSelectedRoleId(roles[0]?.id || '');
-    }
-  }, [defaultRoleId, roles]);
 
   // 处理角色选择
   const handleRoleSelect = (roleId: string) => {
@@ -49,14 +38,14 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ roles, defaultRoleId, onSel
 
   // 处理确认选择
   const handleConfirm = async () => {
-    if (!selectedRoleId) {
+    if (!effectiveSelectedRoleId) {
       message.warning('请选择一个角色');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      onSelect(selectedRoleId);
+      onSelect(effectiveSelectedRoleId);
     } catch {
       message.error('角色选择失败');
     } finally {
@@ -92,7 +81,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ roles, defaultRoleId, onSel
           <Card
             key={role.id}
             className={`role-card cursor-pointer transition-all duration-200 ${
-              selectedRoleId === role.id
+              effectiveSelectedRoleId === role.id
                 ? 'border-blue-500 shadow-md bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
             }`}
@@ -100,7 +89,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ roles, defaultRoleId, onSel
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <Radio checked={selectedRoleId === role.id} onChange={() => handleRoleSelect(role.id)} />
+                <Radio checked={effectiveSelectedRoleId === role.id} onChange={() => handleRoleSelect(role.id)} />
                 <UserOutlined className="text-lg text-gray-500" />
                 <div>
                   <div className="font-medium text-lg">{role.roleName}</div>
@@ -112,7 +101,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ roles, defaultRoleId, onSel
                   <div className="text-xs text-gray-400 mt-1">类型: {role.roleType}</div>
                 </div>
               </div>
-              {selectedRoleId === role.id && <CheckCircleOutlined className="text-blue-500 text-xl" />}
+              {effectiveSelectedRoleId === role.id && <CheckCircleOutlined className="text-blue-500 text-xl" />}
             </div>
           </Card>
         ))}
@@ -122,7 +111,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ roles, defaultRoleId, onSel
         <Button
           type="primary"
           size="large"
-          disabled={!selectedRoleId}
+          disabled={!effectiveSelectedRoleId}
           loading={isSubmitting}
           onClick={handleConfirm}
           className="min-w-32"

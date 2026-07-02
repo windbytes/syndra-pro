@@ -2,7 +2,6 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { Spin } from 'antd';
-import { useRef } from 'react';
 import { commonService } from '@/shared/api/common';
 import { useMenuStore } from '@/shared/stores/preferences.store';
 import { useUserStore } from '@/shared/stores/user.store';
@@ -60,13 +59,7 @@ export function AppRouter() {
     retry: false,
   });
 
-  // 同步构建/重建 router：首帧即创建，菜单引用变化时立即重建（避免旧 router 闪烁）
-  const routerRef = useRef<ReturnType<typeof buildRouter> | null>(null);
-  const menusRef = useRef<RouteItem[] | null>(null);
-  if (routerRef.current === null || menus !== menusRef.current) {
-    routerRef.current = buildRouter(menus);
-    menusRef.current = menus;
-  }
+  const router = buildRouter(menus);
 
   // 已登录但菜单尚未就绪时展示加载态
   if (isLogin && roleId && isFetching && menus.length === 0) {
@@ -77,5 +70,5 @@ export function AppRouter() {
     );
   }
 
-  return <RouterProvider router={routerRef.current} />;
+  return <RouterProvider router={router} />;
 }

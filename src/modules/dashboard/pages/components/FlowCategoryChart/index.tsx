@@ -1,27 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import echarts from '@/shared/config/echartsConfig';
-import { fetchCategoryData, type CategoryData } from '@/modules/dashboard/api';
+import { fetchCategoryData } from '@/modules/dashboard/api';
 import { getFlowCategoryBarChartOption, getResponsiveChartOption } from '../chartConfigs';
 
 export const FlowCategoryChart: React.FC = () => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
-  const [chartData, setChartData] = useState<CategoryData | null>(null);
   const resizeObserverRef = useRef<ResizeObserver | null>(null);
 
-  const { data: categoryData, isFetching } = useQuery({
+  const { data: chartData, isFetching } = useQuery({
     queryKey: ['flowCategoryData'],
     queryFn: fetchCategoryData,
     staleTime: 5 * 60 * 1000,
   });
-
-  useEffect(() => {
-    if (categoryData) {
-      setChartData(categoryData);
-    }
-  }, [categoryData]);
 
   useEffect(() => {
     if (!chartRef.current || !chartData) {

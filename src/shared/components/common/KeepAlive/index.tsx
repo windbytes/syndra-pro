@@ -3,7 +3,7 @@ import { Outlet, useLocation } from '@tanstack/react-router';
 import { Spin } from 'antd';
 import { KeepAlive, type KeepAliveRef, useKeepAliveRef } from 'keepalive-for-react';
 import type React from 'react';
-import { Suspense, useEffect, useMemo } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useTabStore } from '@/shared/stores/tab.store';
 
@@ -29,9 +29,7 @@ const KeepAliveLayout: React.FC = () => {
   const location = useLocation();
   const aliveRef = useKeepAliveRef();
 
-  const keepAliveIncludes = useMemo(() => {
-    return tabs.filter((tab) => tab.route?.meta?.keepAlive).map((tab) => tab.key);
-  }, [tabs]);
+  const keepAliveIncludes = tabs.filter((tab) => tab.route?.meta?.keepAlive).map((tab) => tab.key);
 
   const currentTab = tabs.find((tab) => tab.key === activeKey);
   const reloadKey = currentTab?.reloadKey;
@@ -40,7 +38,7 @@ const KeepAliveLayout: React.FC = () => {
     if (reloadKey && aliveRef.current) {
       aliveRef.current.refresh(activeKey);
     }
-  }, [reloadKey, activeKey]);
+  }, [reloadKey, activeKey, aliveRef]);
 
   useEffect(() => {
     if (aliveRef.current) {
@@ -52,7 +50,7 @@ const KeepAliveLayout: React.FC = () => {
         }
       });
     }
-  }, [tabs]);
+  }, [tabs, aliveRef]);
 
   return (
     <KeepAlive

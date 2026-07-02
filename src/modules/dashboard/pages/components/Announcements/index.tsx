@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Tag } from 'antd';
 import dayjs from 'dayjs';
 import type React from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { announcementService, type AnnouncementItem } from '@/shared/api/system/announcement';
 import webSocketClient, { type AnnouncementMessagePayload } from '@/shared/utils/webscoketClient';
 
@@ -25,10 +25,7 @@ export const Announcements: React.FC = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const mergedAnnouncements = useMemo(
-    () => mergeAnnouncements(liveAnnouncements, announcements || []).slice(0, 4),
-    [announcements, liveAnnouncements]
-  );
+  const mergedAnnouncements = mergeAnnouncements(liveAnnouncements, announcements || []).slice(0, 4);
 
   const getTypeColor = (type: string) => {
     switch (type) {

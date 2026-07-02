@@ -11,7 +11,6 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { App, Avatar, Dropdown, type MenuProps, message } from 'antd';
 import type React from 'react';
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
 import { useShallow } from 'zustand/shallow';
@@ -74,16 +73,13 @@ const UserDropdown: React.FC = () => {
     enabled: userStore.isLogin && Boolean(userStore.isLogin) && !!userStore.loginRoleId,
   });
 
-  // 使用 useMemo 计算当前角色信息，避免无限循环
-  const currentRoleInfo = useMemo(() => {
-    const currentRoleId = userStore.loginRoleId;
-    const currentRole = userRoles.find((role) => role.id === currentRoleId);
-    return {
-      currentRoleId,
-      currentRoleName: currentRole?.roleName || userStore.roleCode || '未选择角色',
-      hasRoles: userRoles.length > 0,
-    };
-  }, [userRoles, userStore.loginRoleId, userStore.roleCode]);
+  const currentRoleId = userStore.loginRoleId;
+  const currentRole = userRoles.find((role) => role.id === currentRoleId);
+  const currentRoleInfo = {
+    currentRoleId,
+    currentRoleName: currentRole?.roleName || userStore.roleCode || '未选择角色',
+    hasRoles: userRoles.length > 0,
+  };
 
   // 角色切换的 mutation
   const roleSwitchMutation = useMutation({
@@ -93,7 +89,9 @@ const UserDropdown: React.FC = () => {
       return roleId;
     },
     onSuccess: () => {
-      // 清空当前标签页
+      queryClient.invalidateQueries({ queryKey: ['dropdwon-user-roles'] });
+      queryClient.invalidateQueries({ queryKey: ['dropdown-user-info'] });
+      queryClient.invalidateQueries({ queryKey: ['menu-list'] });
       resetTabs();
       window.location.reload();
     },

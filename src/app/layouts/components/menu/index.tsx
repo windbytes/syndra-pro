@@ -1,6 +1,6 @@
-import { EllipsisOutlined, LoadingOutlined } from '@ant-design/icons';
-import { Menu, type MenuProps, Spin } from 'antd';
-import { useEffect, useState } from 'react';
+import { EllipsisOutlined } from '@ant-design/icons';
+import { Menu, type MenuProps } from 'antd';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useShallow } from 'zustand/shallow';
@@ -30,15 +30,13 @@ const LayoutMenu: React.FC<LayoutMenuProps> = ({ className, mode = 'horizontal',
       caches: state.caches,
     }))
   );
-  const { dynamicTitle, locale } = usePreferencesStore(
+  const { dynamicTitle } = usePreferencesStore(
     useShallow((state) => ({
       dynamicTitle: state.preferences.app.dynamicTitle,
-      locale: state.preferences.app.locale,
     }))
   );
 
-  const [menuList, setMenuList] = useState<MenuItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const menuList = menus?.length ? buildMenuItems(menus, t) : [];
 
   /** 选中项：根据当前路由高亮；横向模式下不传 openKeys，避免子菜单常开导致其他菜单无法点击 */
   const { selectedKeys, openKeys } = (() => {
@@ -73,27 +71,6 @@ const LayoutMenu: React.FC<LayoutMenuProps> = ({ className, mode = 'horizontal',
       document.title = `Syndra - ${t(route.meta.title)}`;
     }
   }, [pathname, menus, dynamicTitle, t]);
-
-  useEffect(() => {
-    if (!menus?.length) {
-      setMenuList([]);
-      return;
-    }
-    setLoading(true);
-    const tid = setTimeout(() => {
-      setMenuList(buildMenuItems(menus, t));
-      setLoading(false);
-    }, 0);
-    return () => clearTimeout(tid);
-  }, [menus, locale, t]);
-
-  if (loading) {
-    return (
-      <div className={`flex items-center justify-center ${className ?? ''}`}>
-        <Spin indicator={<LoadingOutlined width={24} />} spinning />
-      </div>
-    );
-  }
 
   return (
     <div className={`flex-1 h-full min-w-0 overflow-hidden flex items-center ${className ?? ''}`}>

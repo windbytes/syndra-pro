@@ -86,25 +86,34 @@ const Login: React.FC = () => {
   const [showRoleSelector, setShowRoleSelector] = useState<boolean>(false);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const loginData = useRef<LoginResponse | null>(null);
-  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [isAnimating, setIsAnimating] = useState<boolean>(true);
 
-  const [activeMode, setActiveMode] = useState<UiLoginMode>('password');
+  const [activeMode, setActiveMode] = useState<UiLoginMode>(() => {
+    try {
+      return sessionStorage.getItem(GH_CODE_KEY) ? 'github' : 'password';
+    } catch {
+      return 'password';
+    }
+  });
   const [showAppQrPanel, setShowAppQrPanel] = useState(false);
   const [appQrAnimKey, setAppQrAnimKey] = useState(0);
   const [smsCooldown, setSmsCooldown] = useState(0);
   const [wechatAuthorizeUrl, setWechatAuthorizeUrl] = useState<string | null>(null);
-  const wechatPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const githubOAuthLoginRunnerRef = useRef<(code: string) => Promise<void>>(() => Promise.resolve());
+  const [wechatTicket, setWechatTicket] = useState<string | null>(null);
+  const handleLoginApiResultRef = useRef<
+    (
+      code: number,
+      loginResponse: LoginResponse | undefined,
+      message: string,
+      rememberOpts?: { remember?: boolean; username?: string }
+    ) => Promise<void>
+  >(() => Promise.resolve());
 
   const { data, refetch } = useQuery<{ key: string; code: string }>({
     queryKey: ['getCode'],
     queryFn: loginService.getCaptcha,
     enabled: activeMode === 'password',
   });
-
-  useEffect(() => {
-    setIsAnimating(true);
-  }, []);
 
   useEffect(() => {
     try {
@@ -118,12 +127,40 @@ const Login: React.FC = () => {
   }, [form]);
 
   useEffect(() => {
-    return () => {
-      if (wechatPollRef.current) {
-        clearInterval(wechatPollRef.current);
+    if (!wechatTicket) {
+      return;
+    }
+
+    const pollId = window.setInterval(async () => {
+      try {
+        const poll = await loginService.pollWeChatQr(wechatTicket);
+        if (poll.status === 'DONE' && poll.wechatCode) {
+          setWechatTicket(null);
+          setLoading(true);
+          try {
+            const {
+              code,
+              data: loginResponse,
+              message,
+            } = await loginService.login({
+              loginMethod: 'WECHAT_QR',
+              wechatCode: poll.wechatCode,
+            });
+            await handleLoginApiResultRef.current(code, loginResponse as LoginResponse, message);
+          } finally {
+            setLoading(false);
+          }
+        } else if (poll.status === 'EXPIRED') {
+          setWechatTicket(null);
+          antdUtils.message?.warning(t('login.wechatSessionExpired'));
+        }
+      } catch {
+        // 轮询失败时保持静默，下一轮重试
       }
-    };
-  }, []);
+    }, 2000);
+
+    return () => window.clearInterval(pollId);
+  }, [wechatTicket, t]);
 
   useEffect(() => {
     if (smsCooldown <= 0) {
@@ -314,82 +351,58 @@ const Login: React.FC = () => {
     }
   }
 
-  githubOAuthLoginRunnerRef.current = async (code: string) => {
-    setLoading(true);
-    try {
-      const {
-        code: httpCode,
-        data: loginResponse,
-        message,
-      } = await loginService.login({
-        loginMethod: 'GITHUB',
-        oauthCode: code,
-        oauthRedirectUri: githubRedirectUri(),
-      });
-      await handleLoginApiResult(httpCode, loginResponse as LoginResponse, message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    handleLoginApiResultRef.current = handleLoginApiResult;
+  });
 
   useEffect(() => {
+    let cancelled = false;
+
+    const runGithubOAuthLogin = async (code: string) => {
+      setLoading(true);
+      try {
+        const {
+          code: httpCode,
+          data: loginResponse,
+          message,
+        } = await loginService.login({
+          loginMethod: 'GITHUB',
+          oauthCode: code,
+          oauthRedirectUri: githubRedirectUri(),
+        });
+        if (!cancelled) {
+          await handleLoginApiResultRef.current(httpCode, loginResponse as LoginResponse, message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
     try {
       const code = sessionStorage.getItem(GH_CODE_KEY);
       if (!code) {
-        return;
+        return () => {
+          cancelled = true;
+        };
       }
       sessionStorage.removeItem(GH_CODE_KEY);
-      setActiveMode('github');
-      void githubOAuthLoginRunnerRef.current(code);
+      void runGithubOAuthLogin(code);
     } catch {
       // ignore
     }
-  }, []);
 
-  const completeWechatLogin = async (wechatCode: string) => {
-    setLoading(true);
-    try {
-      const {
-        code,
-        data: loginResponse,
-        message,
-      } = await loginService.login({
-        loginMethod: 'WECHAT_QR',
-        wechatCode,
-      });
-      await handleLoginApiResult(code, loginResponse as LoginResponse, message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const startWeChatQr = async () => {
     try {
       const { ticket, authorizeUrl } = await loginService.startWeChatQr();
       setWechatAuthorizeUrl(authorizeUrl);
-      if (wechatPollRef.current) {
-        clearInterval(wechatPollRef.current);
-      }
-      wechatPollRef.current = setInterval(async () => {
-        try {
-          const poll = await loginService.pollWeChatQr(ticket);
-          if (poll.status === 'DONE' && poll.wechatCode) {
-            if (wechatPollRef.current) {
-              clearInterval(wechatPollRef.current);
-              wechatPollRef.current = null;
-            }
-            await completeWechatLogin(poll.wechatCode);
-          } else if (poll.status === 'EXPIRED') {
-            if (wechatPollRef.current) {
-              clearInterval(wechatPollRef.current);
-              wechatPollRef.current = null;
-            }
-            antdUtils.message?.warning(t('login.wechatSessionExpired'));
-          }
-        } catch {
-          // 轮询失败时保持静默，下一轮重试
-        }
-      }, 2000);
+      setWechatTicket(ticket);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t('login.wechatQrUnavailable');
       antdUtils.message?.error(msg);
@@ -456,10 +469,7 @@ const Login: React.FC = () => {
     setActiveMode(mode);
     form.resetFields();
     setWechatAuthorizeUrl(null);
-    if (wechatPollRef.current) {
-      clearInterval(wechatPollRef.current);
-      wechatPollRef.current = null;
-    }
+    setWechatTicket(null);
     if (mode === 'password') {
       try {
         const savedUsername = localStorage.getItem(REMEMBERED_USERNAME_KEY);

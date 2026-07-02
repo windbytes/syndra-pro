@@ -1,6 +1,5 @@
-import { LoadingOutlined } from '@ant-design/icons';
-import { Layout, Menu, type MenuProps, Spin, theme } from 'antd';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Layout, Menu, type MenuProps, theme } from 'antd';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useShallow } from 'zustand/shallow';
@@ -24,11 +23,10 @@ const DoubleColumnMenu = () => {
       caches: state.caches,
     }))
   );
-  const { dynamicTitle, collapsed, locale, sidebarWidth } = usePreferencesStore(
+  const { dynamicTitle, collapsed, sidebarWidth } = usePreferencesStore(
     useShallow((state) => ({
       dynamicTitle: state.preferences.app.dynamicTitle,
       collapsed: state.preferences.sidebar.collapsed,
-      locale: state.preferences.app.locale,
       sidebarWidth: state.preferences.sidebar.width,
     }))
   );
@@ -46,42 +44,30 @@ const DoubleColumnMenu = () => {
     return m;
   });
 
-  const [menuList, setMenuList] = useState<MenuItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  /** 当前选中的一级菜单 key（有子菜单时用于展示右侧列） */
-  const [selectedFirstKey, setSelectedFirstKey] = useState<string | null>(null);
+  const [menuOverride, setMenuOverride] = useState<{ pathname: string; key: string } | null>(null);
 
-  // 根据 pathname 解析出一级 key 与当前选中 path
-  const { firstLevelKey, selectedPath } = useMemo(() => {
+  const { firstLevelKey, selectedPath } = (() => {
     if (!caches?.pathMap?.size) {
       return { firstLevelKey: null as string | null, selectedPath: null as string | null };
     }
     const { selectedPath: path, openKeys } = resolveMenuSelection(pathname, caches);
     const first = openKeys?.[0] ?? path ?? null;
     return { firstLevelKey: first, selectedPath: path };
-  }, [pathname, caches]);
+  })();
 
-  // 同步路由到“选中的一级”
-  useEffect(() => {
-    if (firstLevelKey != null) {
-      setSelectedFirstKey(firstLevelKey);
-    }
-  }, [firstLevelKey]);
+  const selectedFirstKey =
+    menuOverride?.pathname === pathname ? menuOverride.key : firstLevelKey;
+  const menuList = menus?.length ? buildMenuItems(menus, t) : [];
 
   // 左列：仅一级，不展示子菜单（剥离 children 避免渲染子菜单）
-  const firstLevelItems: MenuItem[] = useMemo(
-    () =>
-      menuList
-        .filter((item): item is NonNullable<MenuItem> => item != null)
-        .map((item) => {
-          const { children: _, ...rest } = item as unknown as Record<string, unknown>;
-          return rest as unknown as MenuItem;
-        }),
-    [menuList]
-  );
+  const firstLevelItems: MenuItem[] = menuList
+    .filter((item): item is NonNullable<MenuItem> => item != null)
+    .map((item) => {
+      const { children: _, ...rest } = item as unknown as Record<string, unknown>;
+      return rest as unknown as MenuItem;
+    });
 
-  // 右列：当前一级的子项
-  const secondLevelItems: MenuItem[] = useMemo(() => {
+  const secondLevelItems: MenuItem[] = (() => {
     if (!selectedFirstKey) {
       return [];
     }
@@ -90,33 +76,25 @@ const DoubleColumnMenu = () => {
       return first.children as MenuItem[];
     }
     return [];
-  }, [menuList, selectedFirstKey]);
+  })();
 
-  const hasChildren = useCallback(
-    (key: string) => {
-      const item = menuList.find((m) => m != null && 'key' in m && m.key === key);
-      return item != null && 'children' in item && Array.isArray(item.children) && item.children.length > 0;
-    },
-    [menuList]
-  );
+  const hasChildren = (key: string) => {
+    const item = menuList.find((m) => m != null && 'key' in m && m.key === key);
+    return item != null && 'children' in item && Array.isArray(item.children) && item.children.length > 0;
+  };
 
-  const onLeftClick: MenuProps['onClick'] = useCallback(
-    ({ key }: { key: string }) => {
-      if (hasChildren(key)) {
-        setSelectedFirstKey(key);
-      } else {
-        navigate({ to: key, replace: true });
-      }
-    },
-    [hasChildren, navigate]
-  );
-
-  const onRightClick: MenuProps['onClick'] = useCallback(
-    ({ key }: { key: string }) => {
+  const onLeftClick: MenuProps['onClick'] = ({ key }: { key: string }) => {
+    if (hasChildren(key)) {
+      setMenuOverride({ pathname, key });
+    } else {
+      setMenuOverride(null);
       navigate({ to: key, replace: true });
-    },
-    [navigate]
-  );
+    }
+  };
+
+  const onRightClick: MenuProps['onClick'] = ({ key }: { key: string }) => {
+    navigate({ to: key, replace: true });
+  };
 
   useEffect(() => {
     const route = searchRoute(pathname, menus);
@@ -124,27 +102,6 @@ const DoubleColumnMenu = () => {
       document.title = `Syndra - ${t(route.meta.title)}`;
     }
   }, [pathname, menus, dynamicTitle, t]);
-
-  useEffect(() => {
-    if (!menus?.length) {
-      setMenuList([]);
-      return;
-    }
-    setLoading(true);
-    const tid = setTimeout(() => {
-      setMenuList(buildMenuItems(menus, t));
-      setLoading(false);
-    }, 0);
-    return () => clearTimeout(tid);
-  }, [menus, locale, t]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <Spin indicator={<LoadingOutlined width={24} />} spinning />
-      </div>
-    );
-  }
 
   const leftSelectedKeys = selectedFirstKey ? [selectedFirstKey] : [];
   const rightSelectedKeys = selectedPath ? [selectedPath] : [];

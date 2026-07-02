@@ -1,7 +1,6 @@
 import { LoadingOutlined, MessageOutlined, NotificationOutlined, ReconciliationOutlined } from '@ant-design/icons';
 import { Button, Card, Spin, Tabs, type TabsProps } from 'antd';
 import { groupBy } from 'lodash-es';
-import type React from 'react';
 import { useEffect, useState } from 'react';
 import MessageList, { type MessageListType } from './MessageList';
 import styles from './message-box.module.css';
@@ -9,24 +8,13 @@ import styles from './message-box.module.css';
 /**
  * 通知模块
  */
-const Notify: React.FC = () => {
-  // 列表加载状态
-  const [loading, setLoading] = useState<boolean>(false);
-
-  // 列表数据(按分类放好的)
-  const [groupData, setGroupData] = useState<{
-    [key: string]: MessageListType;
-  }>({});
-  // 原始数据
+function Notify() {
+  const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState<MessageListType>([]);
+  const groupData: { [key: string]: MessageListType } = groupBy(dataSource, 'type');
 
-  // 加载数据
   useEffect(() => {
-    setLoading(true);
-
-    // 模拟取数据
-    setTimeout(() => {
-      // 模拟从后台取数据
+    const timerId = window.setTimeout(() => {
       setDataSource([
         {
           id: '1',
@@ -44,26 +32,16 @@ const Notify: React.FC = () => {
           status: 1,
         },
       ]);
-      // 取消加载状态
       setLoading(false);
     }, 1000);
+
+    return () => window.clearTimeout(timerId);
   }, []);
 
-  useEffect(() => {
-    // 数据加载完成后将数据进行分组
-    const groupData: { [key: string]: MessageListType } = groupBy(dataSource, 'type');
-    setGroupData(groupData);
-  }, [dataSource]);
-
-  /**
-   * 标记消息已读
-   * @param data 消息数据
-   */
   const readMessage = (data: MessageListType) => {
     console.log('标记消息已读', data);
   };
 
-  // tab列表
   const tabList: TabsProps['items'] = [
     {
       key: 'message',

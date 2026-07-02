@@ -45,9 +45,11 @@ const SearchMenuModal: React.FC = () => {
 
   // 打开时聚焦
   useEffect(() => {
-    if (searchMenuModalOpen) {
-      setTimeout(() => inputRef.current?.focus(), 80);
+    if (!searchMenuModalOpen) {
+      return;
     }
+    const timerId = window.setTimeout(() => inputRef.current?.focus(), 80);
+    return () => window.clearTimeout(timerId);
   }, [searchMenuModalOpen]);
 
   // 滚动到选中项

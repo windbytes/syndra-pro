@@ -1,6 +1,5 @@
-import { LoadingOutlined } from '@ant-design/icons';
-import { Menu, type MenuProps, Spin } from 'antd';
-import { useCallback, useEffect, useReducer, useState } from 'react';
+import { Menu, type MenuProps } from 'antd';
+import { useEffect, useReducer } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useShallow } from 'zustand/shallow';
@@ -29,12 +28,11 @@ const MenuComponent = () => {
       caches: state.caches,
     }))
   );
-  const { accordion, dynamicTitle, collapsed, locale } = usePreferencesStore(
+  const { accordion, dynamicTitle, collapsed } = usePreferencesStore(
     useShallow((state) => ({
       accordion: state.preferences.navigation.accordion,
       dynamicTitle: state.preferences.app.dynamicTitle,
       collapsed: state.preferences.sidebar.collapsed,
-      locale: state.preferences.app.locale,
     }))
   );
   const mode = usePreferencesStore((state) => {
@@ -49,9 +47,7 @@ const MenuComponent = () => {
   });
 
   // 菜单列表
-  const [menuList, setMenuList] = useState<MenuItem[]>([]);
-  // 菜单加载状态
-  const [loading, setLoading] = useState(false);
+  const menuList = menus?.length ? buildMenuItems(menus, t) : [];
   // 菜单状态
   const [menuState, dispatchMenuState] = useReducer(
     menuStateReducer,
@@ -61,9 +57,9 @@ const MenuComponent = () => {
   const { selectedKeys, computedOpenKeys, openKeys, userInteracted } = menuState;
 
   // 菜单点击
-  const clickMenu: MenuProps['onClick'] = useCallback(({ key }: { key: string }) => {
+  const clickMenu: MenuProps['onClick'] = ({ key }: { key: string }) => {
     navigate({ to: key, replace: true });
-  }, []);
+  };
 
   // 菜单展开状态改变
   const onOpenChange = (newOpenKeys: string[]) => {
@@ -100,7 +96,7 @@ const MenuComponent = () => {
         document.title = `Syndra - ${t(title)}`;
       }
     }
-  }, [pathname, menus, dynamicTitle]);
+  }, [pathname, menus, dynamicTitle, t]);
 
   // 菜单状态同步
   useEffect(() => {
@@ -120,45 +116,21 @@ const MenuComponent = () => {
     });
   }, [pathname, menus, caches]);
 
-  // 【优化】只在菜单数据或语言真正变化时重新生成菜单列表
-  useEffect(() => {
-    if (!menus || menus.length === 0) {
-      setMenuList([]);
-      return;
-    }
-
-    setLoading(true);
-    // 使用 setTimeout 将菜单构建推迟到空闲时
-    const timeoutId = setTimeout(() => {
-      const menu = buildMenuItems(menus, t);
-      setMenuList(menu);
-      setLoading(false);
-    }, 0);
-
-    return () => clearTimeout(timeoutId);
-  }, [menus, locale, t]);
-
   return (
-    <>
-      {loading ? (
-        <Spin indicator={<LoadingOutlined width={24} />} spinning />
-      ) : (
-        <Menu
-          className="side-menu"
-          classNames={{
-            root: 'border-e-0!',
-          }}
-          mode="inline"
-          theme={mode}
-          inlineCollapsed={collapsed}
-          selectedKeys={selectedKeys}
-          {...(collapsed ? {} : { openKeys: mergedOpenKeys })}
-          items={menuList}
-          onClick={clickMenu}
-          onOpenChange={onOpenChange}
-        />
-      )}
-    </>
+    <Menu
+      className="side-menu"
+      classNames={{
+        root: 'border-e-0!',
+      }}
+      mode="inline"
+      theme={mode}
+      inlineCollapsed={collapsed}
+      selectedKeys={selectedKeys}
+      {...(collapsed ? {} : { openKeys: mergedOpenKeys })}
+      items={menuList}
+      onClick={clickMenu}
+      onOpenChange={onOpenChange}
+    />
   );
 };
 

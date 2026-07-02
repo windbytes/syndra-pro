@@ -67,7 +67,7 @@ export default defineConfig(({ mode }) => {
               },
               {
                 name: 'lib-utils',
-                test: /node_modules[\\/](lodash-es|dayjs|crypto-js|jsencrypt|clsx|tailwind-merge)/,
+                test: /node_modules[\\/](lodash-es|dayjs|crypto-js|clsx|tailwind-merge)/,
               },
               {
                 name: 'lib-network',
@@ -84,10 +84,6 @@ export default defineConfig(({ mode }) => {
               {
                 name: 'lib-monaco',
                 test: /node_modules[\\/](monaco-editor|@monaco-editor)/,
-              },
-              {
-                name: 'lib-dnd',
-                test: /node_modules[\\/]@dnd-kit/,
               },
               {
                 name: 'lib-i18n',

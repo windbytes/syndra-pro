@@ -19,11 +19,10 @@ const loadLangResources = async (lang: string) => ({
 type Resource = Record<string, Awaited<ReturnType<typeof loadLangResources>>>;
 
 export const loadResources = async (): Promise<Resource> => {
-  const resources: Partial<Resource> = {};
-  for (const lang of LanguagesSupported) {
-    resources[lang] = await loadLangResources(lang);
-  }
-  return resources as Resource;
+  const entries = await Promise.all(
+    LanguagesSupported.map(async (lang) => [lang, await loadLangResources(lang)] as const)
+  );
+  return Object.fromEntries(entries) as Resource;
 };
 
 export async function initI18n() {

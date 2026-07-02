@@ -1,2 +1,6 @@
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
 minimumReleaseAgeExclude:
-  - vite@8.1.0
+  - vite@8.1.2
+trustPolicyExclude:
+  - 'undici-types@6.21.0'

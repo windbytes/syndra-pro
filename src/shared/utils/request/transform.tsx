@@ -79,7 +79,10 @@ export abstract class AxiosTransform {
   /**
    * @description: 请求之前的拦截器
    */
-  requestInterceptors?: (config: InternalAxiosRequestConfig, options: CreateAxiosOptions) => InternalAxiosRequestConfig;
+  requestInterceptors?: (
+    config: InternalAxiosRequestConfig,
+    options: CreateAxiosOptions
+  ) => InternalAxiosRequestConfig | Promise<InternalAxiosRequestConfig>;
 
   /**
    * @description: 请求之后的拦截器
@@ -199,7 +202,7 @@ export const transform: AxiosTransform = {
    * @param config
    * @param options
    */
-  requestInterceptors: (config, options) => {
+  requestInterceptors: async (config, options) => {
     config.headers = config.headers || {};
     const cpt = options?.requestOptions?.encrypt;
 
@@ -234,7 +237,7 @@ export const transform: AxiosTransform = {
         // 并且修改axios内部的transformRequest(不然如果传的json，加密后axios会默认转json字符串，后台接收到的会多双引号)
         config.transformRequest = (data) => data;
       }
-      const result = encrypt(config.data);
+      const result = await encrypt(String(config.data));
       config.data = result.data;
       // 将秘钥放到请求头里面
       config.headers['X-Encrypted-Key'] = result.key;
